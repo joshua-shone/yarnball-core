@@ -104,5 +104,44 @@ require('yargs')
       });
     });
   })
+  .command('commit <type> <file> <next> <value>', 'Commit an array', {}, function(argv) {
+    
+    var fs = require('fs');
+    var List = require('./src/list.js');
+    var WebDB = require('./src/web_db.js');
+    
+    if (argv.type !== 'list') {
+      console.error('Only list type is supported.');
+    }
+    
+    var Node = require('./src/node.js');
+    
+    var next  = Node.fromHex(argv.next);
+    var value = Node.fromHex(argv.value);
+    
+    var webDB = WebDB('.yarnball');
+    
+    fs.readFile(argv.file, 'utf8', function(error, data) {
+      if (error) {
+        console.error(error);
+        return;
+      }
+      
+      var lines = data.split('\n');
+      console.log(lines);
+      
+      var nodes = [];
+      
+      lines.forEach(function(line) {
+        if (line.length >= 32) {
+          console.log(line.slice(0, 32));
+          nodes.push(Node.fromHex(line.slice(0, 32)));
+        }
+      });
+      
+      var list = List(webDB, next, value);
+      list.append(nodes);
+    });
+  })
   .help('help')
   .argv
