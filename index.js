@@ -12,6 +12,16 @@ require('yargs')
       var webDB = WebDB('.yarnball');
     });
   })
+  .command('status', 'Get statistics about the repository.', {}, function(argv) {
+    var WebDB = require('./src/web_db.js');
+    var webDB = WebDB('.yarnball');
+    webDB.stats().then(function(stats) {
+      console.log(stats);
+    })
+    .catch(function(error) {
+      console.error(error);
+    });
+  })
   .command('node', 'Generates a new node, i.e. a universally unique random 16 bytes.', {}, function(argv) {
     var Node = require('./src/node.js');
     console.log(Node.toHex(Node()));

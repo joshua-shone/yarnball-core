@@ -8,6 +8,19 @@ define(['./node', './link', 'level'], function(Node, Link, level) {
     this._db = level(databasePath);
   }
   
+  WebDb.prototype.stats = function() {
+    var self = this;
+    return new Promise(function(resolve, reject) {
+      self._db.open(function(error) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(self._db.db.getProperty('leveldb.stats'));
+        }
+      });
+    });
+  }
+  
   WebDb.prototype.merge = function(web) {
     var self = this;
     return Promise.all([web.getNames(), web.getLinks()]).then(function(values) {
