@@ -114,5 +114,18 @@ require('yargs')
       });
     });
   })
+  .command('query [from] [via] [to]', 'Perform a query.', {}, function(argv) {
+    var Node = require('./src/node.js');
+    var WebDB = require('./src/web_db.js');
+    var webDB = WebDB('.yarnball');
+    var from = argv.from !== '?' ? Node.fromHex(argv.from) : null;
+    var via  = argv.via  !== '?' ? Node.fromHex(argv.via)  : null;
+    var to   = argv.to   !== '?' ? Node.fromHex(argv.to)   : null;
+    webDB.query(from, via, to).then(function(links) {
+      links.forEach(function(link) {
+        console.log(Node.toHex(link.from) + ' ' + Node.toHex(link.via) + ' ' + Node.toHex(link.to));
+      });
+    });
+  })
   .help('help')
   .argv

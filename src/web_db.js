@@ -148,6 +148,16 @@ define(['./node', './link', 'level'], function(Node, Link, level) {
     });
   }
   
+  WebDb.prototype.query = function(from, via, to) {
+    return this.getLinks().then(function(links) {
+      return links.filter(function(link) {
+        return (!from || Node.equal(link.from, from)) &&
+               (!via  || Node.equal(link.via,  via))  &&
+               (!to   || Node.equal(link.to,   to));
+      });
+    });
+  }
+  
   return function(databasePath) {
     return new WebDb(databasePath);
   }
