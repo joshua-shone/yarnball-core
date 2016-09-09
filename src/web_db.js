@@ -157,6 +157,26 @@ define(['./node', './link', 'level'], function(Node, Link, level) {
       });
     });
   }
+
+  WebDb.prototype.queryOne = function(from, via, to) {
+    return this.getLinks().then(function(links) {
+      for (var i=0; i < links.length; i++) {
+        var link = links[i];
+        if ((!from || Node.equal(link.from, from)) &&
+            (!via  || Node.equal(link.via,  via))  &&
+            (!to   || Node.equal(link.to,   to))) {
+          if (!from) {
+            return link.from;
+          } else if (!via) {
+            return link.via;
+          } else if (!to) {
+            return link.to;
+          }
+        }
+      }
+      return null;
+    });
+  }
   
   return function(databasePath) {
     return new WebDb(databasePath);

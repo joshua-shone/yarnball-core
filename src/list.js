@@ -19,32 +19,43 @@ define(['./node', './node-set'], function(Node, NodeSet) {
   }
   
   List.prototype.getKeys = function() {
-    var keys = [];
+    var self = this;
     
-    if (this._base) {
-      keys.push(this._base);
+    return new Promise(function(resolve, reject) {
       
-      var keysAlreadySeen = NodeSet([this._base]);
-    
-      var currentKey = this._base;
-      while (true) {
-        var nextKey = this.nextKey(currentKey);
-        if (!nextKey || keysAlreadySeen.has(nextKey)) {
-          break;
-        }
-        currentKey = nextKey;
-        keysAlreadySeen.add(currentKey);
-        keys.push(currentKey);
+      if (!self._base) {
+        return [];
       }
-    }
     
-    return keys;
+      var keys = [self._base];
+      
+      var keysAlreadySeen = NodeSet([self._base]);
+    
+      var currentKey = self._base;
+      
+      function getNextKey() {
+        self.nextKey(currentKey).then(function(nextKey) {
+          if (!nextKey || keysAlreadySeen.has(nextKey)) {
+            resolve(keys);
+            return;
+          }
+          currentKey = nextKey;
+          keysAlreadySeen.add(currentKey);
+          keys.push(currentKey);
+          getNextKey();
+        });
+      }
+      
+      getNextKey();
+    });
   }
   
   List.prototype.get = function() {
     var self = this;
-    return this.getKeys().map(function(key) {
-      return self.value(key);
+    return this.getKeys().then(function(keys) {
+      return Promise.all(keys.map(function(key) {
+        return self.value(key);
+      }));
     });
   }
   

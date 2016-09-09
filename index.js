@@ -127,5 +127,38 @@ require('yargs')
       });
     });
   })
+  .command('list', 'Get or set a list.',
+    function(yargs) {
+      return yargs.option('value', {
+        alias: 'v',
+        describe: 'Node that links a key in the list to its value.',
+      })
+      .option('next', {
+        alias: 'n',
+        describe: 'Node that links one key in the list to the next',
+      });
+    }, function(argv) {
+    var Node = require('./src/node.js');
+    var WebDB = require('./src/web_db.js');
+    var List = require('./src/list.js');
+    var web = WebDB('.yarnball');
+    var next = Node.fromHex(argv.next);
+    var value = Node.fromHex(argv.value);
+    var nodes = argv._.slice(1).map(function(arg) {
+      return Node.fromHex(arg);
+    });
+    var list = List(web, next, value, nodes[0]);
+    web._db.open(function() {
+      if (nodes.length === 1) {
+        list.get().then(function(nodes) {
+          nodes.forEach(function(node) {
+            console.log(Node.toHex(node));
+          });
+        });
+      } else {
+        list.append(nodes.slice(1));
+      }
+    });
+  })
   .help('help')
   .argv
