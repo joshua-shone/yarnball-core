@@ -1,7 +1,7 @@
 {
-  "name": "yarnball-core",
+  "name": "yarnball",
   "version": "0.1.0",
-  "description": "Simple graph database tool.",
+  "description": "Simple graph-based database tool.",
   "main": "index.js",
   "bin": {
     "yarnball": "./index.js"
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/joshua-shone/yarnball-core.git"
+    "url": "git+https://github.com/joshua-shone/yarnball.git"
   },
   "keywords": [
     "graph-database",
@@ -21,9 +21,9 @@
   "author": "Joshua Shone",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/joshua-shone/yarnball-core/issues"
+    "url": "https://github.com/joshua-shone/yarnball/issues"
   },
-  "homepage": "https://github.com/joshua-shone/yarnball-core#readme",
+  "homepage": "https://github.com/joshua-shone/yarnball#readme",
   "devDependencies": {
     "tap-spec": "^4.1.1",
     "tape": "^4.6.0"

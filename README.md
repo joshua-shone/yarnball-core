@@ -1,4 +1,4 @@
-# yarnball-core
+# yarnball
 
 A simple schema-less graph-based database library and command-line tool.
 
