@@ -70,7 +70,7 @@ require('yargs')
       });
     });
   })
-  .command('link <from> <via> <to>', 'Set a triple', {}, function(argv) {
+  .command('link <from> <via> <to>', 'Set a link.', {}, function(argv) {
     var Node = require('./src/node.js');
     var WebDB = require('./src/web_db.js');
     var webDB = WebDB('.yarnball');
@@ -85,7 +85,7 @@ require('yargs')
       []
     );
   })
-  .command('unlink <from> <via> <to>', 'Remove a triple', {}, function(argv) {
+  .command('unlink <from> <via> <to>', 'Un-set a link.', {}, function(argv) {
     var Node = require('./src/node.js');
     var WebDB = require('./src/web_db.js');
     var webDB = WebDB('.yarnball');
