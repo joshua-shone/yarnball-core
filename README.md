@@ -1,6 +1,8 @@
-# yarnball
+# yarnball (alpha)
 
 A simple schema-less graph-based database library and command-line tool.
+
+**This project is a work-in-progress.**
 
 ## Commands
 
