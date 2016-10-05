@@ -200,30 +200,31 @@ define(['./node', './node-set'], function(Node, NodeSet) {
   List.prototype.clear = function() {
     var self = this;
     var linksRemoved = [];
-    var keys = self.getKeys();
-    var previousKey = null;
-    keys.forEach(function(key) {
-      var value = self.value(key);
-      if (value) {
-        linksRemoved.push({
-          from: key,
-          via: self._value,
-          to: value,
-        });
+    return self.getKeys().then(function(keys) {
+      var previousKey = null;
+      keys.forEach(function(key) {
+        var value = self.value(key);
+        if (value) {
+          linksRemoved.push({
+            from: key,
+            via: self._value,
+            to: value,
+          });
+        }
+        if (previousKey) {
+          linksRemoved.push({
+            from: previousKey,
+            via: self._next,
+            to: key,
+          });
+        }
+        previousKey = key;
+      });
+      self._base = null;
+      if (linksRemoved.length > 0) {
+        return self._web.setLinks([], linksRemoved);
       }
-      if (previousKey) {
-        linksRemoved.push({
-          from: previousKey,
-          via: self._next,
-          to: key,
-        });
-      }
-      previousKey = key;
     });
-    self._base = null;
-    if (linksRemoved.length > 0) {
-      self._web.setLinks([], linksRemoved);
-    }
   }
   
   return function(web, next, value, base) {

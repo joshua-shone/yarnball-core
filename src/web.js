@@ -171,25 +171,29 @@ define(['./node', './link', './node-set', './node-multimap', './node-link-multim
   // Query
   
   Web.prototype.query = function(from, via, to) {
-    if (from && via && !to) {
-      return this.fromVia.get([from, via]);
-    }
-    if (via && to && !from) {
-      return this.viaTo.get([via, to]);
-    }
-    if (from && to && !via) {
-      return this.fromTo.get([from, to]);
-    }
-    throw 'Invalid query for web.';
+    var self = this;
+    return new Promise(function(resolve, reject) {
+      if (from && via && !to) {
+        resolve(self.fromVia.get([from, via]));
+      }
+      if (via && to && !from) {
+        resolve(self.viaTo.get([via, to]));
+      }
+      if (from && to && !via) {
+        resolve(self.fromTo.get([from, to]));
+      }
+      reject('Invalid query for web.');
+    });
   }
   
   Web.prototype.queryOne = function(from, via, to) {
-    var result = this.query(from, via, to);
-    if (result && result.size() === 1) {
-      return result.getOne();
-    } else {
-      return null;
-    }
+    this.query(from, via, to).then(function(result) {
+      if (result && result.size() === 1) {
+        return result.getOne();
+      } else {
+        return null;
+      }
+    });
   }
   
   
