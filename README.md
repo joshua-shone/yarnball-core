@@ -18,6 +18,10 @@ Get statistics about the repository.
 
 Generates a new node, i.e. a universally unique random 16 bytes.
 
+### nodes
+
+List all nodes.
+
 ### name \<name\> [node]
 
 Assign a name to a node
