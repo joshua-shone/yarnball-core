@@ -148,6 +148,31 @@ define(['./node', './link', 'level'], function(Node, Link, level) {
     });
   }
   
+  WebDb.prototype.getNodes = function() {
+    var self = this;
+    return new Promise(function(resolve, reject) {
+      var nodes = new Set();
+      self._db.createReadStream()
+        .on('data', function(data) {
+          if (data.key.startsWith('link:')) {
+            var link = Link.fromKey(data.key.slice('link:'.length));
+            nodes.add(Node.toHex(link.from));
+            nodes.add(Node.toHex(link.via));
+            nodes.add(Node.toHex(link.to));
+          }
+        })
+        .on('error', function(error) {
+          reject(error);
+        })
+        .on('close', function() {
+          resolve(nodes);
+        })
+        .on('end', function() {
+          resolve(nodes);
+        });
+    });
+  }
+
   WebDb.prototype.query = function(from, via, to) {
     return this.getLinks().then(function(links) {
       return links.filter(function(link) {

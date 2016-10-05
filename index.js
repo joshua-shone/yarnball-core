@@ -26,6 +26,15 @@ require('yargs')
     var Node = require('./src/node.js');
     console.log(Node.toHex(Node()));
   })
+  .command('nodes', 'List all nodes.', {}, function(argv) {
+    var WebDB = require('./src/web_db.js');
+    var webDB = WebDB('.yarnball');
+    webDB.getNodes().then(function(nodes) {
+      nodes.forEach(function(node) {
+        console.log(node);
+      });
+    });
+  })
   .command(
     'name <name> [node]', 'Assign a name to a node',
     {},
