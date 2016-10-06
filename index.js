@@ -175,8 +175,15 @@ require('yargs')
     web._db.open(function() {
       if (nodes.length === 1) {
         list.get().then(function(nodes) {
-          nodes.forEach(function(node) {
-            console.log(Node.toHex(node));
+          var namesPromises = nodes.map(function(node) {
+            return web.getName(node).catch(function(error) {
+              return '';
+            });
+          });
+          Promise.all(namesPromises).then(function(names) {
+            nodes.forEach(function(node, index) {
+              console.log(Node.toHex(node) + ' ' + names[index]);
+            });
           });
         });
       } else {
