@@ -27,11 +27,19 @@ require('yargs')
     console.log(Node.toHex(Node()));
   })
   .command('nodes', 'List all nodes.', {}, function(argv) {
+    var Node = require('./src/node.js');
     var WebDB = require('./src/web_db.js');
     var webDB = WebDB('.yarnball');
     webDB.getNodes().then(function(nodes) {
-      nodes.forEach(function(node) {
-        console.log(node);
+      var namesPromises = nodes.map(function(node) {
+        return webDB.getName(node).catch(function(error) {
+          return '';
+        });
+      });
+      Promise.all(namesPromises).then(function(names) {
+        nodes.forEach(function(node, index) {
+          console.log(Node.toHex(node) + ' ' + names[index]);
+        });
       });
     });
   })
@@ -113,13 +121,20 @@ require('yargs')
     var Node = require('./src/node.js');
     var WebDB = require('./src/web_db.js');
     var webDB = WebDB('.yarnball');
-    webDB.getLinks().then(function(links) {
+    Promise.all([webDB.getLinks(), webDB.getNames()]).then(function(results) {
+      var links = results[0];
+      var names = results[1];
+      var namesMap = new Map();
+      names.forEach(function(keyValue) {
+        namesMap.set(Node.toHex(keyValue.id), keyValue.name);
+      });
       links.forEach(function(link) {
-        console.log(
-          Node.toHex(link.from) + ' ' +
-          Node.toHex(link.via)  + ' ' +
-          Node.toHex(link.to)
-        );
+        var line = Node.toHex(link.from) + ' ' + Node.toHex(link.via)  + ' ' + Node.toHex(link.to);
+        var fromName = namesMap.get(Node.toHex(link.from)) || '?';
+        var viaName  = namesMap.get(Node.toHex(link.via))  || '?';
+        var toName   = namesMap.get(Node.toHex(link.to))   || '?';
+        line += ' ' + fromName + ' -> ' + viaName + ' -> ' + toName;
+        console.log(line);
       });
     });
   })

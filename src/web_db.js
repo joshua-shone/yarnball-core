@@ -72,7 +72,20 @@ define(['./node', './link', 'level'], function(Node, Link, level) {
       });
     });
   }
-  
+
+  WebDb.prototype.getName = function(node) {
+    var self = this;
+    return new Promise(function(resolve, reject) {
+      self._db.get('name:' + Node.toHex(node), function(error, value) {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(value);
+      });
+    });
+  }
+
   WebDb.prototype.getNames = function() {
     var self = this;
     return new Promise(function(resolve, reject) {
@@ -151,24 +164,28 @@ define(['./node', './link', 'level'], function(Node, Link, level) {
   WebDb.prototype.getNodes = function() {
     var self = this;
     return new Promise(function(resolve, reject) {
-      var nodes = new Set();
+      var nodesHex = new Set();
       self._db.createReadStream()
         .on('data', function(data) {
           if (data.key.startsWith('link:')) {
             var link = Link.fromKey(data.key.slice('link:'.length));
-            nodes.add(Node.toHex(link.from));
-            nodes.add(Node.toHex(link.via));
-            nodes.add(Node.toHex(link.to));
+            nodesHex.add(Node.toHex(link.from));
+            nodesHex.add(Node.toHex(link.via));
+            nodesHex.add(Node.toHex(link.to));
           }
         })
         .on('error', function(error) {
           reject(error);
         })
         .on('close', function() {
-          resolve(nodes);
+          resolve(Array.from(nodesHex).map(function(node) {
+            return Node.fromHex(node);
+          }));
         })
         .on('end', function() {
-          resolve(nodes);
+          resolve(Array.from(nodesHex).map(function(node) {
+            return Node.fromHex(node);
+          }));
         });
     });
   }
