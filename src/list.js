@@ -76,54 +76,64 @@ define(['./node', './node-set'], function(Node, NodeSet) {
   }
   
   List.prototype.lastKey = function() {
-    if (!this._base) {
-      return null;
-    }
-    var currentNode = this._base;
-    var keysAlreadySeen = NodeSet([this._base]);
-    while (true) {
-      var nextNode = this.nextKey(currentNode);
-      if (!nextNode || keysAlreadySeen.has(nextNode)) {
-        return currentNode;
+    var self = this;
+    return new Promise(function(resolve, reject) {
+      if (!self._base) {
+        resolve(null);
       }
-      currentNode = nextNode;
-    }
+      var currentNode = self._base;
+      var keysAlreadySeen = NodeSet([self._base]);
+      function getNextNode() {
+        self.nextKey(currentNode).then(function(nextNode) {
+          if (!nextNode || keysAlreadySeen.has(nextNode)) {
+            resolve(currentNode);
+            return;
+          }
+          currentNode = nextNode;
+          getNextNode();
+        });
+      }
+      getNextNode();
+    });
   }
   
   List.prototype.append = function(values) {
     var self = this;
-    if (Node.isNode(values)) {
-      values = [values];
-    } else {
-      values = Array.from(values);
-    }
-    if (values.length > 0) {
-      var newLinks = [];
-      var previousKey = self.lastKey();
-      values.forEach(function(value) {
-        var key = Node();
-        if (!self._base) {
-          self._base = key;
-        }
-        newLinks.push({
-          from: key,
-          via: self._value,
-          to: value,
-        });
-        if (previousKey) {
-          newLinks.push({
-            from: previousKey,
-            via: self._next,
-            to: key,
-          });
-        }
-        previousKey = key;
-      });
-      if (newLinks.length > 0) {
-        self._web.setLinks(newLinks, []);
+    return new Promise(function(resolve, reject) {
+      if (Node.isNode(values)) {
+        values = [values];
+      } else {
+        values = Array.from(values);
       }
-    }
-    return self._base;
+      if (values.length > 0) {
+        var newLinks = [];
+        self.lastKey().then(function(previousKey) {
+          values.forEach(function(value) {
+            var key = Node();
+            if (!self._base) {
+              self._base = key;
+            }
+            newLinks.push({
+              from: key,
+              via: self._value,
+              to: value,
+            });
+            if (previousKey) {
+              newLinks.push({
+                from: previousKey,
+                via: self._next,
+                to: key,
+              });
+            }
+            previousKey = key;
+          });
+          if (newLinks.length > 0) {
+            return self._web.setLinks(newLinks, []);
+          }
+        });
+      }
+      resolve(self._base);
+    });
   }
   
   List.prototype.deleteKeys = function(keys) {
