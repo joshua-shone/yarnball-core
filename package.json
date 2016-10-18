@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "amdefine": "^1.0.0",
-    "level": "^1.4.0",
+    "level": "^1.5.0",
     "yargs": "^4.8.1"
   }
 }
