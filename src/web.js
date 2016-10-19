@@ -19,22 +19,19 @@ define(['./node', './link', './node-set', './node-multimap', './node-link-multim
   }
   
   Web.prototype.getNodes = function() {
-    return NodeSet(this.nodesToLinks.keys().map(function(nodes) {
+    return Promise.resolve(NodeSet(this.nodesToLinks.keys().map(function(nodes) {
       return nodes[0];
-    }));
+    })));
   }
   
   
   // Names
   
-  Web.prototype.getNames = function(callback) {
+  Web.prototype.getNames = function() {
     var names = Array.from(this.names.entries(), function(entry) {
       return {id: Node.fromMapKey(entry[0]), name: entry[1]};
     });
-    if (callback) {
-      callback(names);
-    }
-    return names;
+    return Promise.resolve(names);
   }
   
   Web.prototype.addNames = function(names) {
@@ -43,6 +40,7 @@ define(['./node', './link', './node-set', './node-multimap', './node-link-multim
       self.names.set(Node.toMapKey(node.id), node.name);
     });
     this._notifyNames(names, []);
+    return Promise.resolve();
   }
   
   Web.prototype.removeNames = function(nodes) {
@@ -51,18 +49,19 @@ define(['./node', './link', './node-set', './node-multimap', './node-link-multim
       self.names.delete(Node.toMapKey(nodeId));
     });
     this._notifyNames([], nodes);
+    return Promise.resolve();
   }
   
   Web.prototype.hasName = function(id) {
-    return this.names.has(Node.toMapKey(id));
+    return Promise.resolve(this.names.has(Node.toMapKey(id)));
   }
   
   Web.prototype.getName = function(nodeId) {
     var mapKey = Node.toMapKey(nodeId);
     if (!this.names.has(mapKey)) {
-      return "";
+      return Promise.resolve("");
     } else {
-      return this.names.get(mapKey);
+      return Promise.resolve(this.names.get(mapKey));
     }
   }
   
@@ -76,13 +75,16 @@ define(['./node', './link', './node-set', './node-multimap', './node-link-multim
   Web.prototype.equal = function(web) {
     var self = this;
     
-    var links = web.getLinks();
-    if (links.length !== self.links.size) {
-      return false;
-    }
-    
-    return links.every(function(link) {
-      return self.hasLink(link.from, link.via, link.to);
+    return web.getLinks().then(function(links) {
+      if (links.length !== self.links.size) {
+        return false;
+      }
+      
+      return links.every(function(link) {
+        return self.links.has(Node.toHex(link.from) +
+                              Node.toHex(link.via) +
+                              Node.toHex(link.to));
+      });
     });
   }
   
@@ -119,12 +121,13 @@ define(['./node', './link', './node-set', './node-multimap', './node-link-multim
     if (addedLinks.length > 0 || removedLinks.length > 0) {
       self._notifyLinks(addedLinks, removedLinks);
     }
+    return Promise.resolve();
   }
   
   Web.prototype.hasLink = function(from, via, to) {
-    return this.links.has(Node.toHex(from) +
-                          Node.toHex(via) +
-                          Node.toHex(to));
+    return Promise.resolve(this.links.has(Node.toHex(from) +
+                                          Node.toHex(via) +
+                                          Node.toHex(to)));
   }
   
   Web.prototype.getLinkCount = function() {
@@ -135,18 +138,15 @@ define(['./node', './link', './node-set', './node-multimap', './node-link-multim
     return this.nodesToLinks.size();
   }
   
-  Web.prototype.getLinks = function(callback) {
+  Web.prototype.getLinks = function() {
     var links = Array.from(this.links.values(), function(key) {
       return Link.fromKey(key);
     });
-    if (callback) {
-      callback(links);
-    }
-    return links;
+    return Promise.resolve(links);
   }
   
   Web.prototype.getLinksForNode = function(node) {
-    return this.nodesToLinks.get([node]);
+    return Promise.resolve(this.nodesToLinks.get([node]));
   }
   
   Web.prototype.clear = function() {
@@ -154,6 +154,7 @@ define(['./node', './link', './node-set', './node-multimap', './node-link-multim
     this.fromVia.clear();
     this.viaTo.clear();
     this.fromTo.clear();
+    return Promise.resolve();
   }
   
   
@@ -171,23 +172,20 @@ define(['./node', './link', './node-set', './node-multimap', './node-link-multim
   // Query
   
   Web.prototype.query = function(from, via, to) {
-    var self = this;
-    return new Promise(function(resolve, reject) {
-      if (from && via && !to) {
-        resolve(self.fromVia.get([from, via]));
-      }
-      if (via && to && !from) {
-        resolve(self.viaTo.get([via, to]));
-      }
-      if (from && to && !via) {
-        resolve(self.fromTo.get([from, to]));
-      }
-      reject('Invalid query for web.');
-    });
+    if (from && via && !to) {
+      Promise.resolve(this.fromVia.get([from, via]));
+    }
+    if (via && to && !from) {
+      Promise.resolve(this.viaTo.get([via, to]));
+    }
+    if (from && to && !via) {
+      Promise.resolve(this.fromTo.get([from, to]));
+    }
+    Promise.reject('Invalid query for web.');
   }
   
   Web.prototype.queryOne = function(from, via, to) {
-    this.query(from, via, to).then(function(result) {
+    return this.query(from, via, to).then(function(result) {
       if (result && result.size() === 1) {
         return result.getOne();
       } else {

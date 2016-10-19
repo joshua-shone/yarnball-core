@@ -11,13 +11,16 @@ define(['./web', './node-set', './link-set'], function(Web, NodeSet, LinkSet) {
   }
   
   Batch.prototype.apply = function() {
-    var add    = this._batchedAdditions.getLinks();
-    var remove = this._batchedRemovals.getLinks();
-    if (add.length > 0 || remove.length > 0) {
-      this._targetWeb.setLinks(add, remove);
-      this._batchedAdditions.clear();
-      this._batchedRemovals.clear();
-    }
+    var self = this;
+    return Promise.all([self._batchedAdditions.getLinks(), self._batchedRemovals.getLinks()]).then(function(addsRemoves) {
+      var add    = addsRemoves[0];
+      var remove = addsRemoves[1];
+      if (add.length > 0 || remove.length > 0) {
+        self._batchedAdditions.clear();
+        self._batchedRemovals.clear();
+        return self._targetWeb.setLinks(add, remove);
+      }
+    });
   }
   
   
@@ -26,17 +29,22 @@ define(['./web', './node-set', './link-set'], function(Web, NodeSet, LinkSet) {
   Batch.prototype.getLinkCount = function() {
     var self = this;
     var linkCount = self._targetWeb.getLinkCount();
-    self._batchedAdditions.getLinks().forEach(function(link) {
-      if (!self._targetWeb.hasLink(link.from, link.via, link.to)) {
-        linkCount++;
-      }
+    return self._batchedAdditions.getLinks().then(function(links) {
+      links.forEach(function(link) {
+        if (!self._targetWeb.hasLink(link.from, link.via, link.to)) {
+          linkCount++;
+        }
+      });
+    }).then(function() {
+      return self._batchedRemovals.getLinks().then(function(links) {
+        links.forEach(function(link) {
+          if (self._targetWeb.hasLink(link.from, link.via, link.to)) {
+            linkCount--;
+          }
+        });
+        return linkCount;
+      });
     });
-    self._batchedRemovals.getLinks().forEach(function(link) {
-      if (self._targetWeb.hasLink(link.from, link.via, link.to)) {
-        linkCount--;
-      }
-    });
-    return linkCount;
   }
   
   Batch.prototype.getNodeCount = function() {
