@@ -30,19 +30,24 @@ define(['./web', './node-set', './link-set'], function(Web, NodeSet, LinkSet) {
     var self = this;
     var linkCount = self._targetWeb.getLinkCount();
     return self._batchedAdditions.getLinks().then(function(links) {
-      links.forEach(function(link) {
-        if (!self._targetWeb.hasLink(link.from, link.via, link.to)) {
-          linkCount++;
-        }
-      });
-    }).then(function() {
-      return self._batchedRemovals.getLinks().then(function(links) {
-        links.forEach(function(link) {
-          if (self._targetWeb.hasLink(link.from, link.via, link.to)) {
-            linkCount--;
+      return Promise.all(links.map(function(link) {
+        return self._targetWeb.hasLink(link.from, link.via, link.to).then(function(hasLink) {
+          if (!hasLink) {
+            linkCount++;
           }
         });
-        return linkCount;
+      }));
+    }).then(function() {
+      return self._batchedRemovals.getLinks().then(function(links) {
+        return Promise.all(links.map(function(link) {
+          return self._targetWeb.hasLink(link.from, link.via, link.to).then(function(hasLink) {
+            if (hasLink) {
+              linkCount--;
+            }
+          });
+        })).then(function() {
+          return linkCount;
+        });
       });
     });
   }
